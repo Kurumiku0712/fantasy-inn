@@ -10,4 +10,5 @@ public interface IMatchService {
 
     List<Match> getAllMatches();
 
+    void deleteAllMatches();
 }

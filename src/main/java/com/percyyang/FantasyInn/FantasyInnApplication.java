@@ -20,10 +20,10 @@ public class FantasyInnApplication implements CommandLineRunner {
 	private ConversationRepository conversationRepository;
 
 	@Autowired
-	private ChatbotCreationService chatbotCreationService;
-
-    @Autowired
 	private MatchRepository matchRepository;
+
+	@Autowired
+	private ChatbotCreationService chatbotCreationService;
 
 
     public static void main(String[] args) {

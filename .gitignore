@@ -20,6 +20,7 @@ target/
 *.iml
 *.ipr
 *.jpg
+*.properties
 
 ### NetBeans ###
 /nbproject/private/

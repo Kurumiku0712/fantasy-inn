@@ -14,6 +14,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -30,6 +31,15 @@ public class MatchService implements IMatchService {
 
     @Override
     public Match createNewMatch(String chatbotId) {
+
+        // 检查是否已经存在与该chatbotId相关的Match
+        Optional<Match> existingMatch = matchRepository.findByChatbotId(chatbotId);
+        if (existingMatch.isPresent()) {
+            // 如果存在，直接返回现有的Match
+            return existingMatch.get();
+        }
+
+        // 如果不存在，继续创建新的Match
         Chatbot chatbot = chatbotRepository.findById(chatbotId)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
@@ -37,12 +47,15 @@ public class MatchService implements IMatchService {
                 ));
 
         // Make sure there are no existing conversations with this profile already
+        // 创建新的Conversation
         Conversation conversation = new Conversation(
                 UUID.randomUUID().toString(),
                 chatbot.getId(),
                 new ArrayList<>()
         );
         conversationRepository.save(conversation);
+
+        // 创建新的Match
         Match match = new Match(
                 UUID.randomUUID().toString(),
                 chatbot,
@@ -57,4 +70,8 @@ public class MatchService implements IMatchService {
     public List<Match> getAllMatches() {
         return matchRepository.findAll();
     }
+
+    @Override
+    public void  deleteAllMatches() { matchRepository.deleteAll(); }
+
 }

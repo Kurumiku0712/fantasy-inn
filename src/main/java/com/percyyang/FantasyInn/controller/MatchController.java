@@ -32,4 +32,9 @@ public class MatchController {
         return matchService.getAllMatches();
     }
 
+    @DeleteMapping("/chatbot/matches/refresh")
+    public void deleteAllMatches() {
+        matchService.deleteAllMatches();
+    }
+
 }

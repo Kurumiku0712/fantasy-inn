@@ -7,6 +7,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 @RestController
 @CrossOrigin(origins = "*")
 public class ChatbotController {
@@ -18,13 +20,16 @@ public class ChatbotController {
     }
 
     @PostMapping("/chatbot/create")
-    public Chatbot createChatbots() {
-        return chatbotCreationService.createChatbots(1);
+    public void createChatbots() {
+        chatbotCreationService.createChatbots(1);
     }
 
     @GetMapping("/chatbot/random")
     public Chatbot getRandomProfile() {
         return chatbotCreationService.getRandomChatbot();
     }
+
+    @GetMapping("/chatbot/all")
+    public List<Chatbot> getAllChatbots() { return chatbotCreationService.getAllChatbots(); }
 
 }

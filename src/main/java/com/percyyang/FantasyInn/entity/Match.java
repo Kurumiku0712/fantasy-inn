@@ -1,4 +1,19 @@
 package com.percyyang.FantasyInn.entity;
 
-public record Match (String id, Chatbot chatbot, String conversationId) {
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Document(collection = "matches")
+public class Match {
+
+    @Id
+    private String id;
+    private Chatbot chatbot;
+    private String conversationId;
 }

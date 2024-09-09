@@ -4,12 +4,14 @@ import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.percyyang.FantasyInn.entity.Chatbot;
 import com.percyyang.FantasyInn.repo.ChatbotRepository;
+import com.percyyang.FantasyInn.service.AwsS3Service;
 import com.percyyang.FantasyInn.service.interfaces.IChatbotCreationService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.ai.openai.OpenAiChatOptions;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Description;
@@ -20,9 +22,6 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Function;
@@ -33,7 +32,7 @@ import static com.percyyang.FantasyInn.utils.ChatbotUtils.*;
 public class ChatbotCreationService implements IChatbotCreationService {
 
     private static final String STABLE_DIFFUSION_URL =
-          "https://44efe8d25975b2b2c4.gradio.live/sdapi/v1/txt2img";
+            "https://f695847a8ad45cc03a.gradio.live/sdapi/v1/txt2img";
 
     private OpenAiChatModel chatModel;
 
@@ -53,6 +52,9 @@ public class ChatbotCreationService implements IChatbotCreationService {
 
     private ChatbotRepository chatbotRepository;
 
+    @Autowired
+    private AwsS3Service awsS3Service;
+
 
     public ChatbotCreationService(OpenAiChatModel chatModel, ChatbotRepository chatbotRepository) {
         this.chatModel = chatModel;
@@ -68,10 +70,10 @@ public class ChatbotCreationService implements IChatbotCreationService {
     }
 
     @Override
-    public Chatbot createChatbots(int numberOfChatbots) {
+    public void createChatbots(int numberOfChatbots) {
 
         if (!this.initChatbotsInfo) {
-            return null;
+            return;
         }
 
         // 控制 age range, ethnicities, genders for generating chatbots
@@ -91,19 +93,27 @@ public class ChatbotCreationService implements IChatbotCreationService {
 
         while (this.generatedChatbots.size() < numberOfChatbots) {
             int age = getRandomElement(ages);
-            if (age == 0) { age = 18; }
+            if (age == 0) {
+                age = 18;
+            }
             System.out.println("Generated Age: " + age);
 
             String ethnicity = getRandomElement(AnimeEthnicities);
-            if (ethnicity == null) { ethnicity = "Human"; }
+            if (ethnicity == null) {
+                ethnicity = "Human";
+            }
             System.out.println("Generated Ethnicity: " + ethnicity);
 
             String gender = getRandomElement(genderTypes);
-            if (gender == null) { gender = "Unknown"; }
+            if (gender == null) {
+                gender = "Unknown";
+            }
             System.out.println("Generated Gender: " + gender);
 
             String personalityType = getRandomElement(personalityTypes);
-            if (personalityType == null) { personalityType = "Unknown"; }
+            if (personalityType == null) {
+                personalityType = "Unknown";
+            }
             System.out.println("Generated Personality Type: " + personalityType);
 
             String prompt = "Create a Tinder profile persona of an " + personalityType + " "
@@ -116,19 +126,20 @@ public class ChatbotCreationService implements IChatbotCreationService {
             ChatResponse response = chatModel.call(new Prompt(prompt,
                     OpenAiChatOptions.builder().withFunction("saveChatbotInfo").build()));
             System.out.println("From ChatGPT: " + "\n" + response.getResult().getOutput().getContent());
-
         }
-
         // Save the values in a JSON file
         saveChatbotInfoToJson(this.generatedChatbots);
 
-        // Assuming we're generating only one profile, return the last one generated
-        if (!this.generatedChatbots.isEmpty()) {
-            Chatbot newChatbot = this.generatedChatbots.get(this.generatedChatbots.size() - 1);
-            chatbotRepository.save(newChatbot); // Save to the database
-            return newChatbot; // Return the generated chatbot
-        }
-        return null;
+
+//        // Assuming we're generating only one profile, return the last one generated
+//        if (!this.generatedChatbots.isEmpty()) {
+//            Chatbot newChatbot = this.generatedChatbots.get(this.generatedChatbots.size() - 1);
+//            chatbotRepository.save(newChatbot); // Save to the database
+//            System.out.println("Chatbot saved to database: " +
+//                    newChatbot.getFirstName() + " " + newChatbot.getLastName());
+//            return newChatbot; // Return the generated chatbot
+//        }
+//        return null;
     }
 
     @Override
@@ -143,7 +154,7 @@ public class ChatbotCreationService implements IChatbotCreationService {
             generatedChatbots.addAll(existingProfiles);
             List<Chatbot> chatbotsWithImages = new ArrayList<>();
             for (Chatbot chatbot : generatedChatbots) {
-                if (chatbot.getImageUrl() == null || "".equals(chatbot.getImageUrl())) {
+                if (chatbot.getImageUrl() == null || chatbot.getImageUrl().isEmpty()) {
                     chatbot = generateChatbotImage(chatbot);
                 }
                 chatbotsWithImages.add(chatbot);
@@ -152,6 +163,8 @@ public class ChatbotCreationService implements IChatbotCreationService {
             FileWriter writer = new FileWriter(PROFILES_FILE_PATH);
             writer.write(jsonString);
             writer.close();
+            // 立即保存生成的 chatbots 到数据库
+            chatbotRepository.saveAll(chatbotsWithImages);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -212,35 +225,46 @@ public class ChatbotCreationService implements IChatbotCreationService {
             throw new RuntimeException(e);
         }
 
-        // Save the generated image in the resources folder
+        // Save the generated image to AWS S3 instead of local resources
         record ImageResponse(List<String> images) {
         }
 
         Gson gson = new Gson();
         ImageResponse imageResponse = gson.fromJson(response.body(), ImageResponse.class);
         if (imageResponse.images() != null && !imageResponse.images().isEmpty()) {
-            String base64Image = imageResponse.images().get(0);
+            String base64Image = imageResponse.images().getFirst();
 
             // Decode Base64 to binary
             byte[] imageBytes = Base64.getDecoder().decode(base64Image);
-            String directoryPath = "src/main/resources/static/images/";
-            String filePath = directoryPath + chatbot.getImageUrl();
-            Path directory = Paths.get(directoryPath);
-            if (!Files.exists(directory)) {
-                try {
-                    Files.createDirectories(directory);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-            // Save the image to a file
-            try (FileOutputStream imageOutFile = new FileOutputStream(filePath)) {
-                imageOutFile.write(imageBytes);
-            } catch (IOException e) {
-                return null;
-            }
-        }
 
+            // Generate a unique file name for the image in S3
+            String fileName = chatbot.getId() + ".jpg";
+
+            // Call the method to upload the image to S3
+            String s3ImageUrl = awsS3Service.saveChatbotImageToS3(imageBytes, fileName);
+
+            // Set the S3 image URL to the chatbot's imageUrl field
+            chatbot.setImageUrl(s3ImageUrl);
+            System.out.println("Generated image URL for chatbot " + chatbot.getFirstName() + " " +
+                    chatbot.getLastName() + ": " + s3ImageUrl);
+//            String directoryPath = "src/main/resources/static/images/";
+//            String filePath = directoryPath + chatbot.getImageUrl();
+//            Path directory = Paths.get(directoryPath);
+//            if (!Files.exists(directory)) {
+//                try {
+//                    Files.createDirectories(directory);
+//                } catch (IOException e) {
+//                    throw new RuntimeException(e);
+//                }
+//            }
+//            // Save the image to a file
+//            try (FileOutputStream imageOutFile = new FileOutputStream(filePath)) {
+//                imageOutFile.write(imageBytes);
+//            } catch (IOException e) {
+//                return null;
+//            }
+//        }
+        }
         return chatbot;
     }
 
@@ -291,4 +315,10 @@ public class ChatbotCreationService implements IChatbotCreationService {
         return chatbotRepository.getRandomChatbot();
     }
 
+    @Override
+    public List<Chatbot> getAllChatbots() {
+        return chatbotRepository.findAllExcludingUser();
+    }
+
 }
+

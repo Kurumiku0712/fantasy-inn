@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 
 @Service
@@ -26,7 +27,6 @@ public class AwsS3Service {
     private String awsS3SecretKey;
 
     public String saveImageToS3(MultipartFile photo) {
-        String s3LocationImage = null;
 
         try {
 
@@ -52,4 +52,32 @@ public class AwsS3Service {
             throw new OurException("Unable to upload image to s3 bucket" + e.getMessage());
         }
     }
+
+    // 保存byte[]格式的图片到S3
+    public String saveChatbotImageToS3(byte[] imageBytes, String fileName) {
+        try {
+            BasicAWSCredentials awsCredentials = new BasicAWSCredentials(awsS3AccessKey, awsS3SecretKey);
+            AmazonS3 s3Client = AmazonS3ClientBuilder.standard()
+                    .withCredentials(new AWSStaticCredentialsProvider(awsCredentials))
+                    .withRegion(Regions.AP_SOUTHEAST_2)
+                    .build();
+
+            InputStream inputStream = new ByteArrayInputStream(imageBytes);
+
+            ObjectMetadata metadata = new ObjectMetadata();
+            metadata.setContentType("image/jpeg");
+            metadata.setContentLength(imageBytes.length);
+
+            // 上传byte[]文件到S3
+            PutObjectRequest putObjectRequest = new PutObjectRequest(bucketName, fileName, inputStream, metadata);
+            s3Client.putObject(putObjectRequest);
+
+            return "https://" + bucketName + ".s3.amazonaws.com/" + fileName;
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new OurException("Unable to upload chatbot image to S3 bucket: " + e.getMessage());
+        }
+    }
 }
+

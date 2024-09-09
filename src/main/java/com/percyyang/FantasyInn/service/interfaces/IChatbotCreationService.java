@@ -6,7 +6,7 @@ import java.util.List;
 
 public interface IChatbotCreationService {
 
-    Chatbot createChatbots(int numberOfChatbots);
+    void createChatbots(int numberOfChatbots);
 
     void saveChatbotInfoToJson(List<Chatbot> generatedChatbots);
 
@@ -16,4 +16,5 @@ public interface IChatbotCreationService {
 
     Chatbot getRandomChatbot();
 
+    List<Chatbot> getAllChatbots();
 }
