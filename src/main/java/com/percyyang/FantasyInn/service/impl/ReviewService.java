@@ -4,6 +4,7 @@ import com.mongodb.client.result.UpdateResult;
 import com.percyyang.FantasyInn.entity.Movie;
 import com.percyyang.FantasyInn.entity.Review;
 import com.percyyang.FantasyInn.repo.ReviewRepository;
+import com.percyyang.FantasyInn.service.interfaces.IReviewService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -13,7 +14,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 
 @Service
-public class ReviewService {
+public class ReviewService implements IReviewService {
     @Autowired
     private ReviewRepository repository;
 

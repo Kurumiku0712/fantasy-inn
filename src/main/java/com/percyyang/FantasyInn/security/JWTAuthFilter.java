@@ -29,6 +29,15 @@ public class JWTAuthFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 
+        // Get the request URI
+        String requestURI = request.getRequestURI();
+
+        // If the request URI starts with "/chatbot", skip JWT validation
+        if (requestURI.startsWith("/chatbot")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         final String authHeader = request.getHeader("Authorization");
         final String jwtToken;
         final String userEmail;
