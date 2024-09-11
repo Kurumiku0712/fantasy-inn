@@ -15,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Description;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
@@ -32,7 +33,7 @@ import static com.percyyang.FantasyInn.utils.ChatbotUtils.*;
 public class ChatbotCreationService implements IChatbotCreationService {
 
     private static final String STABLE_DIFFUSION_URL =
-            "https://f695847a8ad45cc03a.gradio.live/sdapi/v1/txt2img";
+            "https://8184e9f93181b829d9.gradio.live/sdapi/v1/txt2img";
 
     private OpenAiChatModel chatModel;
 
@@ -317,7 +318,7 @@ public class ChatbotCreationService implements IChatbotCreationService {
 
     @Override
     public List<Chatbot> getAllChatbots() {
-        return chatbotRepository.findAllExcludingUser();
+        return chatbotRepository.findAllExcludingUser(Sort.by(Sort.Direction.ASC, "firstName"));
     }
 
 }

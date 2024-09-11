@@ -16,7 +16,8 @@ public interface BookingRepository extends MongoRepository<Booking, String> {
     // 自定义mongoDB查询, 查询某一时间段内所有有效的预订
     // checkInDate is less than or equal to the checkOutDate
     // and while the checkOutDate is greater than or equal to the checkInDate
-    @Query("{ 'checkInDate': { $lte: ?1 }, 'checkOutDate': { $gte: ?0 } }")
+    @Query(value = "{ 'checkInDate': { $lte: ?1 }, 'checkOutDate': { $gte: ?0 } }")
     List<Booking> findBookingsByDateRange(LocalDate checkInDate,  LocalDate checkOutDate);
+
 
 }

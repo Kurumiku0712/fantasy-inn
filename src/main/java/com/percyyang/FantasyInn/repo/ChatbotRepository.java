@@ -1,6 +1,7 @@
 package com.percyyang.FantasyInn.repo;
 
 import com.percyyang.FantasyInn.entity.Chatbot;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.repository.Aggregation;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
@@ -18,6 +19,6 @@ public interface ChatbotRepository extends MongoRepository<Chatbot, String> {
 
     // 自定义查询，排除 id 为 "user" 的 Chatbot
     @Query("{ 'id': { $ne: 'user' } }")
-    List<Chatbot> findAllExcludingUser();
+    List<Chatbot> findAllExcludingUser(Sort sort);
 
 }

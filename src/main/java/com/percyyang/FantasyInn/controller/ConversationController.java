@@ -15,7 +15,6 @@ import java.util.ArrayList;
 import java.util.UUID;
 
 @RestController
-@CrossOrigin(origins = "*")
 public class ConversationController {
 
     private final ConversationService conversationService;
