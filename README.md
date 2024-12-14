@@ -6,8 +6,20 @@ https://drive.google.com/file/d/15vCsdHe3SlKA0T6ZmvEg-KwqPapMK88P/view?usp=shari
 
 
 
-**Project Overview:**
-The Fantasy Inn is a virtual world enthusiast's immersive booking system that provides AI-driven personalized services, enabling users to interact with virtual characters and enjoy an enhanced virtual world experience. This platform includes modules such as room booking, management, order search, and a cinema feature. It is developed using **Spring Boot** and **React** in a **decoupled front-end and back-end architecture**.
+**Project Description:**
+Aimed at virtual world enthusiasts, this system offers an immersive booking experience and AI-driven personalised services, generating virtual characters with random personalities and images, and enabling real-time interactive conversations.
+
+- Integrated ChatGPT via the Spring AI framework to develop an interactive chatbot capable of generating random attributes such as name, age, gender, race, and personality, enhancing user engagement and enjoyment
+
+- Deployed Stable Diffusion by integrating modes from the civitai platform, creating stylised avatars based on user profiles to enrich the chatting experience
+
+- Migrated the database from MySQL to MongoDB to improve data processing efficiency, resulting in a 40% increase in development speed
+
+- Implemented Google reCAPTCHA to collect user behaviour data, effectively preventing automated attacks and strengthening the platform's security
+
+- Leveraged AWS S3 to store images in the cloud, ensuring high availability and optimised global access speeds
+
+Relevant Skills: React, Spring Boot, Spring AI, Spring Security, JWT, MongoDB, AWS S3
 
 
 
