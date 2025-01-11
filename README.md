@@ -2,7 +2,7 @@
 
 Video Link: 
 
-https://drive.google.com/file/d/15vCsdHe3SlKA0T6ZmvEg-KwqPapMK88P/view?usp=sharing
+https://youtu.be/KwBUXIYMDpA
 
 
 
